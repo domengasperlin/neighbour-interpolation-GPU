@@ -1,0 +1,33 @@
+{
+  "name": "neighbour-interpolation-on-gpu",
+  "version": "1.0.0",
+  "description": "Real-time natural neighbour interpolation of point cloud data using GPU\n",
+  "main": "index.js",
+  "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-proposal-class-properties": "^7.0.0",
+    "@babel/plugin-proposal-decorators": "^7.0.0",
+    "@babel/plugin-proposal-export-namespace-from": "^7.0.0",
+    "@babel/plugin-proposal-function-sent": "^7.0.0",
+    "@babel/plugin-proposal-json-strings": "^7.0.0",
+    "@babel/plugin-proposal-numeric-separator": "^7.0.0",
+    "@babel/plugin-proposal-throw-expressions": "^7.0.0",
+    "@babel/plugin-syntax-dynamic-import": "^7.0.0",
+    "@babel/plugin-syntax-import-meta": "^7.0.0",
+    "@babel/plugin-transform-runtime": "^7.9.0",
+    "@babel/preset-env": "^7.0.0",
+    "babel-loader": "^8.0.0",
+    "raw-loader": "^0.5.1",
+    "url-loader": "^4.0.0",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.1.1",
+    "webpack-dev-server": "^3.10.3"
+  },
+  "scripts": {
+    "develop": "webpack-dev-server --hot --inline --mode development",
+    "build": "webpack --mode production"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.3.0"
+  }
+}
