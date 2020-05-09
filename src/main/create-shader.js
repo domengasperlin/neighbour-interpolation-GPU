@@ -6,6 +6,7 @@ const createShader = (gl, sourceCode, type) => {
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
         var info = gl.getShaderInfoLog(shader);
+        gl.deleteShader(shader);
         throw 'Could not compile WebGL program. \n\n' + info;
     }
     return shader;

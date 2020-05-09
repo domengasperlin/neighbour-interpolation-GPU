@@ -5,12 +5,12 @@ glMatrix.setMatrixArrayType(Float32Array);
 
 const createVertexBuffer = gl => {
     // Create and initialize buffer
-    const geometryBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, geometryBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, (new Float32Array([])), gl.STATIC_DRAW);
+    const vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    return geometryBuffer;
-}
+    return vertexBuffer;
+};
 
 const createRenderBuffer = gl => {
 
@@ -20,7 +20,7 @@ const createRenderBuffer = gl => {
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, gl.canvas.width, gl.canvas.height);
 
     return renderBuffer;
-}
+};
 
 const createFrameBuffer = gl => {
 
@@ -28,7 +28,7 @@ const createFrameBuffer = gl => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
 
     return frameBuffer;
-}
+};
 
 
 export default {

@@ -1,16 +1,17 @@
+#version 300 es
 
-precision mediump float;
+precision highp float;
 
-attribute vec3 attr_position;
+in vec2 a_position;
+
+out vec2 texCoords;
 
 
-uniform mat4 mWorld;
-uniform mat4 mView;
-uniform mat4 mProj;
-uniform mat4 mModel;
 
 void main(void) {
 
-  gl_Position = mProj * mView * mModel * mWorld * vec4(attr_position, 1.0);
-  
+    texCoords = (a_position+1.0)/2.0;
+    gl_Position = vec4(a_position, 1.0, 1.0);
+
+
 }

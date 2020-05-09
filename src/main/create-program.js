@@ -9,7 +9,13 @@ const createProgram = (gl, shaderData) => {
 
     gl.linkProgram(program);
 
-    return program;
+    let success = gl.getProgramParameter(program, gl.LINK_STATUS);
+
+    if (success) return program;
+
+    console.log(gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+
 };
 
 export default createProgram;
