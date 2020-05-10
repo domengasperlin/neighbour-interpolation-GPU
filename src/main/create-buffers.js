@@ -1,8 +1,6 @@
 const {glMatrix} = require('gl-matrix');
 glMatrix.setMatrixArrayType(Float32Array);
 
-
-
 const createVertexBuffer = gl => {
     // Create and initialize buffer
     const vertexBuffer = gl.createBuffer();
