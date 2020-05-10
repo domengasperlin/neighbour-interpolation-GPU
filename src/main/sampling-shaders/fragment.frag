@@ -7,7 +7,6 @@ out vec4 outColor;
 in vec2 texCoords;
 
 uniform sampler2D texture_u_image;
-uniform sampler2D texture_u2;
 uniform vec2 resolution;
 
 float rand(vec2 co){
@@ -15,7 +14,6 @@ float rand(vec2 co){
 }
 
 void main(void) {
-
 
     vec2 position = texCoords;
 

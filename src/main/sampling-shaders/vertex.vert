@@ -2,6 +2,8 @@
 
 precision highp float;
 
+
+// input, It will receive data from a buffer
 in vec2 a_position;
 
 out vec2 texCoords;

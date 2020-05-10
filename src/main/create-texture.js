@@ -1,3 +1,5 @@
+
+
 function loadTexture(gl, url) {
     return new Promise((resolve, reject) => {
         gl.activeTexture(gl.TEXTURE0);
