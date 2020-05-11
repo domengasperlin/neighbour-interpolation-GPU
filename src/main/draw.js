@@ -11,19 +11,24 @@ const draw = (gl, now, state) => {
 
 const render = (gl, now, state) => {
 
+
     // Render to our targetTexture by binding the framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, state.frameBuffertex1);
-    // TODO: Maybe not needed
-    gl.activeTexture(gl.TEXTURE1);
+    // Specifies which texture unit to make active.
+    gl.activeTexture(gl.TEXTURE0);
     //gl.uniform1i(state.uniformsSampling.textureLocation1, 0);
+    gl.bindTexture(gl.TEXTURE_2D, state.imageTexture);
 
+    // Clear buffers
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     //gl.bindTexture(gl.TEXTURE2D, state.imageTexture);
-    draw(gl, now, state);
+    gl.drawArrays(gl.TRIANGLES, 0, 6)
 
     // Unbind the framebuffer and Render to the canvas
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.bindVertexArray(state.vertexArrayObject);
 
+    gl.bindVertexArray(state.vertexArrayObject);
+    // Specifies which texture unit to make active.
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, state.imageTexture);
 
@@ -32,7 +37,7 @@ const render = (gl, now, state) => {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 
-    draw(gl, now, state);
+    gl.drawArrays(gl.TRIANGLES, 0, 6)
 
     //requestAnimationFrame(now => render(gl, now, state));
 };

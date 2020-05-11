@@ -2,7 +2,6 @@
 
 function loadTexture(gl, url) {
     return new Promise((resolve, reject) => {
-        gl.activeTexture(gl.TEXTURE0);
 
         const texture = gl.createTexture();
 
@@ -20,10 +19,6 @@ function loadTexture(gl, url) {
         // format and type of the data you're supplying to WebGL
         const srcFormat = gl.RGBA;
         const srcType = gl.UNSIGNED_BYTE;
-
-        function isPowerOf2(value) {
-            return (value & (value - 1)) == 0;
-        }
 
         const pixel = new Uint8Array([255, 255, 255, 255]);  // black
         gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
@@ -57,7 +52,6 @@ function loadTexture(gl, url) {
 
 // TODO: check the datatypes https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html
 function createDataTexture(gl) {
-    gl.activeTexture(gl.TEXTURE1);
 
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -82,11 +76,12 @@ function createDataTexture(gl) {
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border,
         format, srcType, null);
 
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 
     return texture;
 

@@ -1,11 +1,17 @@
 #version 300 es
 
-precision mediump float;
-in vec3 position;
-uniform vec4 projectionMatrix;
-uniform vec4 modelviewMatrix;
+precision highp float;
 
-void main()
-{
-    gl_Position = projectionMatrix * modelviewMatrix * vec4(position, 1.0);
+
+// input, It will receive data from a buffer
+in vec2 a_position;
+
+out vec2 texCoords;
+
+void main(void) {
+
+    texCoords = (a_position-1.0)/2.0;
+    gl_Position = vec4(a_position, 1.0, 1.0);
+
+
 }

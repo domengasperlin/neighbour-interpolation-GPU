@@ -15,21 +15,42 @@ import img from '../assets/images/lenna.png'
 import verts from "./two-triangles";
 
 let imageTexture = null;
-let imageDataTexture = null;
+let imageDataTexture1 = null;
+let gl = null;
 
 async function initTextures(gl) {
     imageTexture = await createTexture.loadTexture(gl, img);
-    imageDataTexture = await createTexture.createDataTexture(gl);
+    imageDataTexture1 = await createTexture.loadTexture(gl, img);
 }
 
+// Resize canvas and viewport
+const resize = () => {
+    resizeCanvas(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+};
+
+function renderDraw(n) {
+    //gl.clearColor(0.0, 1.0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, n);
+    resize();
+}
+
+function bindFramebufferAndSetViewport(fb, width, height) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.viewport(0, 0, width, height);
+}
 
 const main = async () => {
 
     const canvas = document.getElementById('canvas');
 
-    const gl = canvas.getContext('webgl2');
+    gl = canvas.getContext('webgl2');
 
     await initTextures(gl);
+
+    // Select stages to be performed
+    const performStages = [1,2];
 
     // ========================================================================  CREATE PROGRAMS, SETUP ATTRIBUTES AND UNIFORM LOCATIONS ========================================================================
 
@@ -64,20 +85,24 @@ const main = async () => {
     const jfaProgram = createProgram(gl, jfaShaders);
 
     const attributesJFA = {
-        step: gl.getAttribLocation(jfaProgram, 'step'),
+        position: gl.getAttribLocation(jfaProgram, 'a_position'),
     };
 
     const uniformsJFA = {
-
+        textureLocation1: gl.getUniformLocation(jfaProgram, 'texture_u_image'),
+        resolution: gl.getUniformLocation(jfaProgram, 'resolution'),
     };
 
+    resize(gl);
+    window.onresize = resize;
 
     // ======================================================================== FRAMEBUFFER ========================================================================
     const frameBuffertex1 = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffertex1);
+
+    bindFramebufferAndSetViewport(frameBuffertex1, gl.canvas.width, gl.canvas.height);
 
     // Attach the texture as the first color attachment to the framebuffer
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, imageDataTexture, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, imageDataTexture1, 0);
 
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !==
         gl.FRAMEBUFFER_COMPLETE) {
@@ -116,38 +141,88 @@ const main = async () => {
     // ======================================================================== UNBIND ARRAY_BUFFER, VERTEX ARRAY =======================================================================
 
 
-    // Resize canvas and viewport
-    const resize = () => {
-        resizeCanvas(gl.canvas);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    };
-    resize();
-    window.onresize = resize;
-
-    // Clear the canvas
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 
-    // Sets WebGL program for sampling e.g. all the gl.uniformXXX functions set uniforms on the current program.
-    gl.useProgram(samplingProgram);
-    //gl.useProgram(jfaProgram);
+
+    if (performStages.includes(1)) {
+        // Sets WebGL program for sampling e.g. all the gl.uniformXXX functions set uniforms on the current program.
+        gl.useProgram(samplingProgram);
 
 
-    render(gl, 0, {
-        attributesSampling,
-        uniformsSampling,
-        vertexArrayObject,
-        imageTexture,
-        imageDataTexture,
-        frameBuffertex1,
-    });
+        // Render to the canvas ===========================================================================
+        gl.bindVertexArray(vertexArrayObject);
 
-    //gl.useProgram(jfaProgram);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, imageTexture);
 
-    //gl.drawArrays(gl.TRIANGLES, 0, 6)
 
-    //gl.getFramebufferAttachmentParameter(frameBuffertex1, gl.COLOR_ATTACHMENT0)
+        // You only need to set the texture unit if you use a unit other than 0 because uniforms default to 0.
+        gl.uniform1i(uniformsSampling.textureLocation1, 0);
+
+        renderDraw(6);
+
+
+        gl.bindTexture(gl.TEXTURE_2D, imageTexture);
+        // Render to our targetTexture by binding the framebuffer ==========================================
+        bindFramebufferAndSetViewport(frameBuffertex1, gl.canvas.width, gl.canvas.height);
+
+        gl.uniform1i(uniformsSampling.textureLocation1, 0);
+
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+        renderDraw(6);
+
+        // Unbind the framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindVertexArray(null);
+
+    }
+
+
+
+    if (performStages.includes(2)) {
+        gl.useProgram(jfaProgram);
+
+        // ======================================================================== CREATE AND BIND ARRAY_BUFFER AND VERTEX ARRAY ====================================================
+
+        // Put data in a buffer (array of binary data that will be uploaded to GPU)
+        let positionBufferJFA = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferJFA); // Bound BUFFER will be used by attribute below
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+        // CREATE VERTEX ARRAY - First we need to create a collection of attribute state called a Vertex Array Object.
+        // The state of attributes, which buffers to use for each one and
+        // how to pull out data from those buffers, is collected into a vertex array object (VAO).
+        let vertexArrayObjectJFA = gl.createVertexArray();
+        // Make that the current vertex array so that all of our attribute settings will apply to that set of attribute state
+        gl.bindVertexArray(vertexArrayObjectJFA);
+
+        // This tells WebGL we want to get data out of a buffer. If we don't turn on the attribute then the attribute will have a constant value.
+        gl.enableVertexAttribArray(attributesJFA.position);
+        // Then we need to specify how to pull the data out,
+        // A hidden part of gl.vertexAttribPointer is that it binds the current ARRAY_BUFFER to the attribute => positions would get pulled from current bound buffer
+        // Specify type of data to pull and its structure
+        gl.vertexAttribPointer(attributesJFA.position, 2, gl.FLOAT, false, 0, 0);
+        // Buffers are not random access. Instead a vertex shaders is executed a specified number of times.
+        // Each time it's executed the next value from each specified buffer is pulled out and assigned to an attribute.
+        gl.bindVertexArray(null);
+
+        // ======================================================================== UNBIND ARRAY_BUFFER, VERTEX ARRAY =======================================================================
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        // Unbind the framebuffer and Render to the canvas
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        gl.bindVertexArray(vertexArrayObjectJFA);
+        // Specifies which texture unit to make active.
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, imageDataTexture1);
+
+        // You only need to set the texture unit if you use a unit other than 0 because uniforms default to 0.
+        gl.uniform1i(uniformsJFA.textureLocation1, 0);
+        renderDraw(6);
+        gl.bindVertexArray(null);
+
+    }
 
 };
 

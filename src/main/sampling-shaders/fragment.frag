@@ -3,8 +3,9 @@
 
 precision highp float;
 
-out vec4 outColor;
 in vec2 texCoords;
+layout(location = 0) out vec4 outColor;
+
 
 uniform sampler2D texture_u_image;
 uniform vec2 resolution;
@@ -19,7 +20,7 @@ void main(void) {
 
     vec4 tmpOutColor = texture(texture_u_image, texCoords);
 
-    if (rand(vec2(texCoords.x, texCoords.y)) < 0.9) {
+    if (rand(vec2(texCoords.x, texCoords.y)) < 0.5) {
 
         // Zero alpha black pixel
         tmpOutColor = vec4(tmpOutColor.rgb, 0.0);

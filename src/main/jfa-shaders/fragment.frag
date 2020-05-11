@@ -1,15 +1,22 @@
 #version 300 es
 
-precision mediump float;
 
-uniform sampler2D tex0,tex1; /* the textures to read from */
-uniform float width,height; /* window dimensions */
-uniform float step; /* jump flooding step size */
+precision highp float;
 
-out vec4 fragData;
+out vec4 outColor;
+in vec2 texCoords;
 
-void main()
-{
+uniform sampler2D texture_u_image;
+uniform vec2 resolution;
 
-    fragData = vec4(1.0,0.0,0.0,1.0);
+
+void main(void) {
+
+    vec2 position = texCoords;
+
+    vec4 tmpOutColor = texture(texture_u_image, texCoords);
+
+    outColor = tmpOutColor;
+//    outColor = vec4(1.0,0.0,0.0,1.0);
+
 }

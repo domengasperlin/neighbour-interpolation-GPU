@@ -8,13 +8,15 @@ const resizeCanvas = (canvas, multiplier) => {
     var displayHeight = Math.floor(canvas.clientHeight * cssToRealPixels);
 
     // Check if the canvas is not the same size.
+
     if (canvas.width !== displayWidth ||
         canvas.height !== displayHeight) {
 
-        // Make the canvas the same size
-        canvas.width = displayWidth;
-        canvas.height = displayHeight;
+
     }
+    // Make the canvas fixed size
+    canvas.width = 220;
+    canvas.height = 220;
 };
 
 export default resizeCanvas;
