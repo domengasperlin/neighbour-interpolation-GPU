@@ -72,6 +72,10 @@ function createDataTexture(gl) {
     //gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Valid alignment values are 1, 2, 4, and 8.
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+
     // We don't need to supply any data. We just need WebGL to allocate the texture. By passing null, we will have all zeros
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border,
         format, srcType, null);
