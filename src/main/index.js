@@ -47,6 +47,9 @@ const main = async () => {
 
     gl = canvas.getContext('webgl2');
 
+    resize();
+    window.onresize = resize;
+
     await initTextures(gl);
 
     // Select stages to be performed
@@ -93,8 +96,7 @@ const main = async () => {
         resolution: gl.getUniformLocation(jfaProgram, 'resolution'),
     };
 
-    resize(gl);
-    window.onresize = resize;
+
 
     // ======================================================================== FRAMEBUFFER ========================================================================
     const frameBuffertex1 = gl.createFramebuffer();
