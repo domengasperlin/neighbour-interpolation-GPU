@@ -67,9 +67,42 @@ function createDataTexture(gl) {
     const width = gl.canvas.width;
     const height = gl.canvas.height;
 
-    // Check if that is necesarry gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    // For wrong size of data
-    //gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Valid alignment values are 1, 2, 4, and 8.
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+
+    // We don't need to supply any data. We just need WebGL to allocate the texture. By passing null, we will have all zeros
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border,
+        format, srcType, null);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+
+    return texture;
+
+}
+
+function createXYTexture(gl) {
+
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    const level = 0;
+    // the format the GPU will use internally
+    const internalFormat = gl.RGBA32F;
+    // format and type of the data you're supplying to WebGL
+    const format = gl.RGBA;
+    const srcType = gl.FLOAT;
+    const border = 0;
+
+    const width = gl.canvas.width;
+    const height = gl.canvas.height;
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -94,4 +127,5 @@ function createDataTexture(gl) {
 module.exports = {
     loadTexture,
     createDataTexture,
+    createXYTexture,
 };

@@ -14,13 +14,25 @@ import resizeCanvas from './resize-canvas';
 import img from '../assets/images/lenna.png'
 import verts from "./two-triangles";
 
+// Textures
 let imageTexture = null;
 let imageDataTexture1 = null;
+let jfaXYTexture = null;
+
+// Webgl context
 let gl = null;
 
+// Select stages (programs) to be performed
+const performStages = [1,2];
+
 async function initTextures(gl) {
+    // Image texture that will be used for sampling in program 1
     imageTexture = await createTexture.loadTexture(gl, img);
+    // The same image is used instead of data texture if we want to skip the sampling program (e.g. input image is already sampled)
     imageDataTexture1 = await createTexture.loadTexture(gl, img);
+    // Floating texture used to JFA algorithm
+    jfaXYTexture = await createTexture.createXYTexture(gl);
+
 }
 
 // Resize canvas and viewport
@@ -52,8 +64,6 @@ const main = async () => {
 
     await initTextures(gl);
 
-    // Select stages to be performed
-    const performStages = [1,2];
 
     // ========================================================================  CREATE PROGRAMS, SETUP ATTRIBUTES AND UNIFORM LOCATIONS ========================================================================
 
