@@ -8,6 +8,9 @@ import jfaVertexShaderSrc from './jfa-shaders/vertex.vert';
 import simpleDFragmentShaderSrc from './simple-draw/fragment.frag';
 import simpleDVertexShaderSrc from './simple-draw/vertex.vert';
 
+import positionTextureFragmentShaderSrc from './texture-render/fragment.frag';
+import positionTextureVertexShaderSrc from './texture-render/vertex.vert';
+
 // Helper functions
 import createProgram from './create-program';
 import createTexture from './create-texture';
@@ -24,7 +27,7 @@ let jfaXYDataTexture = null;
 // Webgl context
 let gl = null;
 // Select stages (programs) to be performed
-const performStages = [1, 2, 3];
+const performStages = [1, 2, 3, 4];
 
 async function initTextures(gl) {
     // Image texture that will be used for sampling in program 1
@@ -114,280 +117,327 @@ function bindTextureAndAttachementToFrameBuffer(frameBuffer, texture, attachemen
 
 const main = async () => {
 
-        const canvas = document.getElementById('canvas');
+    const canvas = document.getElementById('canvas');
 
-        gl = canvas.getContext('webgl2');
+    gl = canvas.getContext('webgl2');
 
-        resize();
-        window.onresize = resize;
+    resize();
+    window.onresize = resize;
 
-        await initTextures(gl);
+    await initTextures(gl);
 
 
-        // ========================================================================  CREATE PROGRAMS, SETUP ATTRIBUTES AND UNIFORM LOCATIONS ========================================================================
+    // ========================================================================  CREATE PROGRAMS, SETUP ATTRIBUTES AND UNIFORM LOCATIONS ========================================================================
 
-        // SAMPLING PROGRAM
+    // SAMPLING PROGRAM
 
-        const samplingShaders = [
-            {src: samplingFragmentShaderSrc, type: gl.FRAGMENT_SHADER},
-            {src: samplingVertexShaderSrc, type: gl.VERTEX_SHADER}
-        ];
+    const samplingShaders = [
+        {src: samplingFragmentShaderSrc, type: gl.FRAGMENT_SHADER},
+        {src: samplingVertexShaderSrc, type: gl.VERTEX_SHADER}
+    ];
 
-        const samplingProgram = createProgram(gl, samplingShaders);
+    const samplingProgram = createProgram(gl, samplingShaders);
 
-        // Looking up attribute locations
-        const attributesSampling = {
-            position: gl.getAttribLocation(samplingProgram, 'a_position'),
-        };
+    // Looking up attribute locations
+    const attributesSampling = {
+        position: gl.getAttribLocation(samplingProgram, 'a_position'),
+    };
 
-        // Looking up uniform locations
-        const uniformsSampling = {
-            textureLocation1: gl.getUniformLocation(samplingProgram, 'texture_u_image'),
-        };
+    // Looking up uniform locations
+    const uniformsSampling = {
+        textureLocation1: gl.getUniformLocation(samplingProgram, 'texture_u_image'),
+    };
 
-        // JFA PROGRAM
+    // JFA PROGRAM
 
-        const jfaShaders = [
-            {src: jfaFragmentShaderSrc, type: gl.FRAGMENT_SHADER},
-            {src: jfaVertexShaderSrc, type: gl.VERTEX_SHADER}
-        ];
+    const jfaShaders = [
+        {src: jfaFragmentShaderSrc, type: gl.FRAGMENT_SHADER},
+        {src: jfaVertexShaderSrc, type: gl.VERTEX_SHADER}
+    ];
 
-        const jfaProgram = createProgram(gl, jfaShaders);
+    const jfaProgram = createProgram(gl, jfaShaders);
 
-        const attributesJFA = {
-            position: gl.getAttribLocation(jfaProgram, 'a_position'),
-        };
+    const attributesJFA = {
+        position: gl.getAttribLocation(jfaProgram, 'a_position'),
+    };
 
-        const uniformsJFA = {
-            jfa_material_tex1: gl.getUniformLocation(jfaProgram, 'material.color1M'),
-            jfa_material_tex2: gl.getUniformLocation(jfaProgram, 'material.color2M'),
-            jfa_width: gl.getUniformLocation(jfaProgram, 'imageWidth'),
-            jfa_height: gl.getUniformLocation(jfaProgram, 'imageHeight'),
-            jfa_step: gl.getUniformLocation(jfaProgram, 'step'),
-        };
+    const uniformsJFA = {
+        jfa_material_tex1: gl.getUniformLocation(jfaProgram, 'material.color1M'),
+        jfa_material_tex2: gl.getUniformLocation(jfaProgram, 'material.color2M'),
+        jfa_width: gl.getUniformLocation(jfaProgram, 'imageWidth'),
+        jfa_height: gl.getUniformLocation(jfaProgram, 'imageHeight'),
+        jfa_step: gl.getUniformLocation(jfaProgram, 'step'),
+    };
 
-        // SIMPLE DRAW PROGRAM
+    // SIMPLE DRAW PROGRAM
 
-        const sDrawShaders = [
-            {src: simpleDFragmentShaderSrc, type: gl.FRAGMENT_SHADER},
-            {src: simpleDVertexShaderSrc, type: gl.VERTEX_SHADER}
-        ];
+    const sDrawShaders = [
+        {src: simpleDFragmentShaderSrc, type: gl.FRAGMENT_SHADER},
+        {src: simpleDVertexShaderSrc, type: gl.VERTEX_SHADER}
+    ];
 
-        const sDrawProgram = createProgram(gl, sDrawShaders);
+    const sDrawProgram = createProgram(gl, sDrawShaders);
 
-        const attributesSDraw = {
-            position: gl.getAttribLocation(sDrawProgram, 'a_position'),
-        };
+    const attributesSDraw = {
+        position: gl.getAttribLocation(sDrawProgram, 'a_position'),
+    };
 
-        const uniformsSDraw = {
-            textureLocation1: gl.getUniformLocation(sDrawProgram, 'texture_u_image'),
-        };
+    const uniformsSDraw = {
+        textureLocation1: gl.getUniformLocation(sDrawProgram, 'texture_u_image'),
+    };
 
 
-        // ======================================================================== FRAMEBUFFER SETUP ========================================================================
-        const samplingColorsframeBuffertex = gl.createFramebuffer();
+    // POSITION TEXTURE DRAW PROGRAM
 
-        bindTextureAndAttachementToFrameBuffer(samplingColorsframeBuffertex, imageDataTexture1, gl.COLOR_ATTACHMENT0);
+    const positionTextureShaders = [
+        {src: positionTextureFragmentShaderSrc, type: gl.FRAGMENT_SHADER},
+        {src: positionTextureVertexShaderSrc, type: gl.VERTEX_SHADER}
+    ];
 
-        bindTextureAndAttachementToFrameBuffer(samplingColorsframeBuffertex, jfaXYDataTexture, gl.COLOR_ATTACHMENT1);
+    const positionTextureProgram = createProgram(gl, positionTextureShaders);
 
+    const attributesPositionTexture = {
+        position: gl.getAttribLocation(positionTextureProgram, 'a_position'),
+    };
 
-        // ======================================================================== SAMPLING PROGRAM  ====================================================
+    const uniformsPositionTexture = {
+        positions_texture: gl.getUniformLocation(positionTextureProgram, 'positions_texture'),
+        image_texture: gl.getUniformLocation(positionTextureProgram, 'image_texture'),
+    };
 
-        if (performStages.includes(1)) {
 
-            let positionBuffer = gl.createBuffer();
-            let vertexArrayObject = gl.createVertexArray();
-            prepareSimpleProgramAndUse(samplingProgram, positionBuffer, vertexArrayObject, attributesSampling.position);
+    // ======================================================================== FRAMEBUFFER SETUP ========================================================================
+    const samplingColorsframeBuffertex = gl.createFramebuffer();
 
+    bindTextureAndAttachementToFrameBuffer(samplingColorsframeBuffertex, imageDataTexture1, gl.COLOR_ATTACHMENT0);
 
-            // Render to the canvas
-            gl.bindVertexArray(vertexArrayObject);
+    bindTextureAndAttachementToFrameBuffer(samplingColorsframeBuffertex, jfaXYDataTexture, gl.COLOR_ATTACHMENT1);
 
-            // Prepare textures and texture units
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, imageTexture);
-            gl.uniform1i(uniformsSampling.textureLocation1, 0);
 
-            renderDraw(6);
+    // ======================================================================== SAMPLING PROGRAM  ====================================================
 
+    if (performStages.includes(1)) {
 
-            // Render to samplingColorsframeBuffertex by binding the framebuffer ==========================================
-            bindFramebufferAndSetViewport(samplingColorsframeBuffertex, gl.canvas.width, gl.canvas.height);
-            gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
-            renderDraw(6);
+        let positionBuffer = gl.createBuffer();
+        let vertexArrayObject = gl.createVertexArray();
+        prepareSimpleProgramAndUse(samplingProgram, positionBuffer, vertexArrayObject, attributesSampling.position);
 
 
+        // Render to the canvas
+        gl.bindVertexArray(vertexArrayObject);
 
-            // Clean up before next program
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.bindVertexArray(null);
-            gl.bindTexture(gl.TEXTURE_2D, null);
+        // Prepare textures and texture units
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, imageTexture);
+        gl.uniform1i(uniformsSampling.textureLocation1, 0);
 
-        }
+        renderDraw(6);
 
 
-        // ========================================================================  JFA PROGRAM ====================================================
+        // Render to samplingColorsframeBuffertex by binding the framebuffer ==========================================
+        bindFramebufferAndSetViewport(samplingColorsframeBuffertex, gl.canvas.width, gl.canvas.height);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        renderDraw(6);
 
-        let coordinatesTextures = [jfaXYDataTexture];
-        let colorTextures = [jfaXYDataTexture];
 
-        if (performStages.includes(2)) {
-
-            let positionBufferJFA = gl.createBuffer();
-            let vertexArrayObjectJFA = gl.createVertexArray();
-            prepareSimpleProgramAndUse(jfaProgram, positionBufferJFA, vertexArrayObjectJFA, attributesJFA.position);
-
-            gl.bindVertexArray(vertexArrayObjectJFA);
-
-
-            // EXECUTE JFA ALGORITHM
-            gl.uniform1f(uniformsJFA.jfa_width, gl.canvas.width);
-            gl.uniform1f(uniformsJFA.jfa_height, gl.canvas.height);
-
-            let step = 1;
-            while (step * 2 < gl.canvas.width || step * 2 < gl.canvas.height) step *= 2;
-
-
-            const jumpFloodingFrameBuffer = gl.createFramebuffer();
-
-            // perform iterations
-            let curr = 0;
-
-            while (step >= 1) {
-
-                // Create textures for current iteration
-                let color = createTexture.createDataTexture(gl);
-                let coordinates = createTexture.createDataTexture(gl);
-
-                // Bind them
-                bindTextureAndAttachementToFrameBuffer(jumpFloodingFrameBuffer, color, gl.COLOR_ATTACHMENT0);
-                bindTextureAndAttachementToFrameBuffer(jumpFloodingFrameBuffer, coordinates, gl.COLOR_ATTACHMENT1);
-                bindFramebufferAndSetViewport(jumpFloodingFrameBuffer, gl.canvas.width, gl.canvas.height);
-
-                // Bind appropriate textures on different positions
-                // Specifies which texture unit to make active.
-
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, coordinatesTextures[curr]);
-
-                gl.activeTexture(gl.TEXTURE1);
-                gl.bindTexture(gl.TEXTURE_2D, colorTextures[curr]);
-
-                // Prepare buffers to draw the outputs on the two textures
-                gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
-
-                // Setup the uniforms
-                gl.uniform1f(uniformsJFA.jfa_step, step);
-                gl.uniform1i(uniformsJFA.jfa_material_tex1, 0);
-                gl.uniform1i(uniformsJFA.jfa_material_tex2, 1);
-
-                renderDraw(6);
-
-                colorTextures.push(color);
-                coordinatesTextures.push(coordinates);
-
-                curr++;
-                step /= 2;
-            }
-
-
-            // Clean up before next program
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.bindVertexArray(null);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-
-        }
-
-
-        // ========================================================================  SIMPLE DRAW PROGRAM ====================================================
-        if (performStages.includes(3)) {
-
-            // Choose demo for results with specified delay
-            let stepDelay = 1000;
-            let showSteps = [1,2,3,4];
-
-            let positionBufferSDraw = gl.createBuffer();
-            let vertexArrayObjectSDraw = gl.createVertexArray();
-            prepareSimpleProgramAndUse(sDrawProgram, positionBufferSDraw, vertexArrayObjectSDraw, attributesSDraw.position);
-
-            gl.bindVertexArray(vertexArrayObjectSDraw);
-
-            // Specifies which texture unit to make active.
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, imageDataTexture1);
-
-            gl.activeTexture(gl.TEXTURE1);
-            gl.bindTexture(gl.TEXTURE_2D, jfaXYDataTexture);
-
-            gl.activeTexture(gl.TEXTURE3);
-            gl.bindTexture(gl.TEXTURE_2D, imageTexture);
-
-            if (showSteps.includes(1)) {
-
-                document.getElementById('demo_id').innerText = `1 Original image`;
-                gl.uniform1i(uniformsSDraw.textureLocation1, 3);
-                renderDraw(6);
-                await sleep(stepDelay);
-            }
-
-            if (showSteps.includes(2)) {
-
-                document.getElementById('demo_id').innerText = `2 Image after sampling seed points`;
-                gl.uniform1i(uniformsSDraw.textureLocation1, 0);
-                renderDraw(6);
-                await sleep(stepDelay);
-            }
-
-            if (showSteps.includes(3)) {
-
-                document.getElementById('demo_id').innerText = `3 Position coordinates texture`;
-                gl.uniform1i(uniformsSDraw.textureLocation1, 1);
-                renderDraw(6);
-                await sleep(stepDelay);
-            }
-
-
-            if (showSteps.includes(4)) {
-
-                for (let j = 0; j < coordinatesTextures.length; j++) {
-                    document.getElementById('demo_id').innerText = `4 Iteration: ${j} of JFA`;
-
-                    gl.activeTexture(gl.TEXTURE2);
-                    gl.bindTexture(gl.TEXTURE_2D, coordinatesTextures[j]);
-                    gl.uniform1i(uniformsSDraw.textureLocation1, 2);
-                    renderDraw(6);
-                    await sleep(500);
-
-                }
-            }
-
-            // if (showSteps.includes(5)) {
-            //
-            //     for (let j = 0; j < colorTextures.length; j++) {
-            //         document.getElementById('demo_id').innerText = `5 Iterations ${j} of JFA`;
-            //
-            //         gl.activeTexture(gl.TEXTURE3);
-            //         gl.bindTexture(gl.TEXTURE_2D, colorTextures[j]);
-            //         gl.uniform1i(uniformsSDraw.textureLocation1, 3);
-            //         renderDraw(6);
-            //         await sleep(100);
-            //
-            //     }
-            // }
-
-            gl.bindVertexArray(null);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-
-            // Clean up
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.bindVertexArray(null);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-
-        }
-
+        // Clean up before next program
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindVertexArray(null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
 
     }
-;
+
+
+    // ========================================================================  JFA PROGRAM ====================================================
+
+    let coordinatesTextures = [jfaXYDataTexture];
+    let colorTextures = [jfaXYDataTexture];
+
+    if (performStages.includes(2)) {
+
+        let positionBufferJFA = gl.createBuffer();
+        let vertexArrayObjectJFA = gl.createVertexArray();
+        prepareSimpleProgramAndUse(jfaProgram, positionBufferJFA, vertexArrayObjectJFA, attributesJFA.position);
+
+        gl.bindVertexArray(vertexArrayObjectJFA);
+
+
+        // EXECUTE JFA ALGORITHM
+        gl.uniform1f(uniformsJFA.jfa_width, gl.canvas.width);
+        gl.uniform1f(uniformsJFA.jfa_height, gl.canvas.height);
+
+        let step = 1;
+        while (step * 2 < gl.canvas.width || step * 2 < gl.canvas.height) step *= 2;
+
+
+        const jumpFloodingFrameBuffer = gl.createFramebuffer();
+
+        // perform iterations
+        let curr = 0;
+
+        while (step >= 1) {
+
+            // Create textures for current iteration
+            let color = createTexture.createDataTexture(gl);
+            let coordinates = createTexture.createDataTexture(gl);
+
+            // Bind them
+            bindTextureAndAttachementToFrameBuffer(jumpFloodingFrameBuffer, color, gl.COLOR_ATTACHMENT0);
+            bindTextureAndAttachementToFrameBuffer(jumpFloodingFrameBuffer, coordinates, gl.COLOR_ATTACHMENT1);
+            bindFramebufferAndSetViewport(jumpFloodingFrameBuffer, gl.canvas.width, gl.canvas.height);
+
+            // Bind appropriate textures on different positions
+            // Specifies which texture unit to make active.
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, coordinatesTextures[curr]);
+
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, colorTextures[curr]);
+
+            // Prepare buffers to draw the outputs on the two textures
+            gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+
+            // Setup the uniforms
+            gl.uniform1f(uniformsJFA.jfa_step, step);
+            gl.uniform1i(uniformsJFA.jfa_material_tex1, 0);
+            gl.uniform1i(uniformsJFA.jfa_material_tex2, 1);
+
+            renderDraw(6);
+
+            colorTextures.push(color);
+            coordinatesTextures.push(coordinates);
+
+            curr++;
+            step /= 2;
+        }
+
+
+        // Clean up before next program
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindVertexArray(null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+    }
+
+
+    // ========================================================================  SIMPLE DRAW PROGRAM ====================================================
+    if (performStages.includes(3)) {
+
+        // Choose demo for results with specified delay
+        let stepDelay = 1000;
+        let showSteps = [1, 2, 3, 4];
+
+        let positionBufferSDraw = gl.createBuffer();
+        let vertexArrayObjectSDraw = gl.createVertexArray();
+        prepareSimpleProgramAndUse(sDrawProgram, positionBufferSDraw, vertexArrayObjectSDraw, attributesSDraw.position);
+
+        gl.bindVertexArray(vertexArrayObjectSDraw);
+
+        // Specifies which texture unit to make active.
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, imageDataTexture1);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, jfaXYDataTexture);
+
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, imageTexture);
+
+        if (showSteps.includes(1)) {
+
+            document.getElementById('demo_id').innerText = `1 Original image`;
+            gl.uniform1i(uniformsSDraw.textureLocation1, 3);
+            renderDraw(6);
+            await sleep(stepDelay);
+        }
+
+        if (showSteps.includes(2)) {
+
+            document.getElementById('demo_id').innerText = `2 Image after sampling seed points`;
+            gl.uniform1i(uniformsSDraw.textureLocation1, 0);
+            renderDraw(6);
+            await sleep(stepDelay);
+        }
+
+        if (showSteps.includes(3)) {
+
+            document.getElementById('demo_id').innerText = `3 Position coordinates texture`;
+            gl.uniform1i(uniformsSDraw.textureLocation1, 1);
+            renderDraw(6);
+            await sleep(stepDelay);
+        }
+
+
+        if (showSteps.includes(4)) {
+
+            for (let j = 0; j < coordinatesTextures.length; j++) {
+                document.getElementById('demo_id').innerText = `4 Iteration: ${j} of JFA`;
+
+                gl.activeTexture(gl.TEXTURE2);
+                gl.bindTexture(gl.TEXTURE_2D, coordinatesTextures[j]);
+                gl.uniform1i(uniformsSDraw.textureLocation1, 2);
+                renderDraw(6);
+                await sleep(500);
+
+            }
+        }
+
+        // if (showSteps.includes(5)) {
+        //
+        //     for (let j = 0; j < colorTextures.length; j++) {
+        //         document.getElementById('demo_id').innerText = `5 Iterations ${j} of JFA`;
+        //
+        //         gl.activeTexture(gl.TEXTURE3);
+        //         gl.bindTexture(gl.TEXTURE_2D, colorTextures[j]);
+        //         gl.uniform1i(uniformsSDraw.textureLocation1, 3);
+        //         renderDraw(6);
+        //         await sleep(100);
+        //
+        //     }
+        // }
+
+        gl.bindVertexArray(null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        // Clean up
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindVertexArray(null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+    }
+
+    // ========================================================================  NEAREST NEIGHBOUR PROGRAM ====================================================
+
+    if (performStages.includes(4)) {
+
+        let positionBufferFromTex = gl.createBuffer();
+        let vertexArrayObjectFromTex = gl.createVertexArray();
+        prepareSimpleProgramAndUse(positionTextureProgram, positionBufferFromTex, vertexArrayObjectFromTex, attributesPositionTexture.position);
+
+        gl.bindVertexArray(vertexArrayObjectFromTex);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, coordinatesTextures[coordinatesTextures.length - 1]);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, imageDataTexture1);
+
+        document.getElementById('demo_id').innerText = `Nearest neighbour`;
+        gl.uniform1i(uniformsPositionTexture.positions_texture, 0);
+        gl.uniform1i(uniformsPositionTexture.image_texture, 1);
+        renderDraw(6);
+
+
+        // Clean up before next program
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindVertexArray(null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+    }
+
+
+}
+
 
 export default main;
