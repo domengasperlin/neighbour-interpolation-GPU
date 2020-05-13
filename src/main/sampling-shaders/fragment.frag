@@ -21,10 +21,11 @@ void main(void) {
     // (${x,y},${vedno 0},${kot alpha pri barvi})
     vec4 tmpPosition = vec4(texCoords, 0.0, 1.0);
 
-    if (rand(vec2(texCoords.x, texCoords.y)) < 0.9) {
+    if (rand(vec2(texCoords.x, texCoords.y)) < 0.99) {
 
         // Zero alpha black pixel
         tmpOutColor = vec4(tmpOutColor.rgb, 0.0);
+
         tmpPosition = vec4(texCoords, 0.0, 0.0);
 
     }

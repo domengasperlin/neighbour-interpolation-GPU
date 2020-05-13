@@ -6,11 +6,13 @@ precision highp float;
 // input, It will receive data from a buffer
 in vec2 a_position;
 
-out vec2 texCoords;
+out vec2 point;
 
 void main(void) {
 
-    texCoords = (a_position-1.0)/2.0;
+
+    point = (a_position.xy*0.5)+vec2(0.5,0.5);
+
     gl_Position = vec4(a_position, 1.0, 1.0);
 
 
