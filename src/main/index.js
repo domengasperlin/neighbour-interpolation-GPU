@@ -28,6 +28,7 @@ let jfaXYDataTexture = null;
 let gl = null;
 // Select stages (programs) to be performed
 const performStages = [1, 2, 3, 4];
+let realtime = false;
 
 async function initTextures(gl) {
     // Image texture that will be used for sampling in program 1
@@ -322,7 +323,7 @@ const main = async () => {
 
 
     // ========================================================================  SIMPLE DRAW PROGRAM ====================================================
-    if (performStages.includes(3)) {
+    if (performStages.includes(3) && !realtime) {
 
         // Choose demo for results with specified delay
         let stepDelay = 1000;
