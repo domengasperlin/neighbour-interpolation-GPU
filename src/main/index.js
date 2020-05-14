@@ -11,6 +11,9 @@ import simpleDVertexShaderSrc from './simple-draw/vertex.vert';
 import positionTextureFragmentShaderSrc from './texture-render/fragment.frag';
 import positionTextureVertexShaderSrc from './texture-render/vertex.vert';
 
+import naturalNeighbourFragmentShaderSrc from './natural-neighbour/fragment.frag';
+import naturalNeighbourVertexShaderSrc from './natural-neighbour/vertex.vert';
+
 // Helper functions
 import createProgram from './create-program';
 import createTexture from './create-texture';
@@ -28,7 +31,7 @@ let jfaXYDataTexture = null;
 let gl = null;
 // Select stages (programs) to be performed
 const performStages = [1, 2, 3, 4];
-let realtime = false;
+let realtime = true;
 
 async function initTextures(gl) {
     // Image texture that will be used for sampling in program 1
@@ -205,6 +208,28 @@ const main = async () => {
         positions_texture: gl.getUniformLocation(positionTextureProgram, 'positions_texture'),
         image_texture: gl.getUniformLocation(positionTextureProgram, 'image_texture'),
     };
+
+    // NATURAL NEIGHBOUR PROGRAM
+
+    const naturalNeighbourTextureShaders = [
+        {src: naturalNeighbourFragmentShaderSrc, type: gl.FRAGMENT_SHADER},
+        {src: naturalNeighbourVertexShaderSrc, type: gl.VERTEX_SHADER}
+    ];
+
+    const naturalNeighbourTextureProgram = createProgram(gl, naturalNeighbourTextureShaders);
+
+    const naturalNeighbourPositionAttributes = {
+        position: gl.getAttribLocation(naturalNeighbourTextureProgram, 'a_position'),
+    };
+
+    const naturalNeighbourPositionTexture = {
+        positions_texture: gl.getUniformLocation(naturalNeighbourTextureProgram, 'positions_texture'),
+        image_texture: gl.getUniformLocation(naturalNeighbourTextureProgram, 'image_texture'),
+        nn_width: gl.getUniformLocation(naturalNeighbourTextureProgram, 'imageWidth'),
+        nn_height: gl.getUniformLocation(naturalNeighbourTextureProgram, 'imageHeight'),
+    };
+
+
 
 
     // ======================================================================== FRAMEBUFFER SETUP ========================================================================
@@ -427,6 +452,42 @@ const main = async () => {
         document.getElementById('demo_id').innerText = `Nearest neighbour`;
         gl.uniform1i(uniformsPositionTexture.positions_texture, 0);
         gl.uniform1i(uniformsPositionTexture.image_texture, 1);
+        renderDraw(6);
+
+
+        // Clean up before next program
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindVertexArray(null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+    }
+
+
+    // ========================================================================  NATURAL NEIGHBOUR PROGRAM ====================================================
+
+
+    if (performStages.includes(5)) {
+
+        let positionBufferNaturalNeighbour = gl.createBuffer();
+        let vertexArrayObjectNaturalNeighbour = gl.createVertexArray();
+        prepareSimpleProgramAndUse(naturalNeighbourTextureProgram, positionBufferNaturalNeighbour, vertexArrayObjectNaturalNeighbour, naturalNeighbourPositionAttributes.position);
+
+        gl.bindVertexArray(vertexArrayObjectNaturalNeighbour);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, coordinatesTextures[coordinatesTextures.length - 1]);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, imageDataTexture1);
+
+        document.getElementById('demo_id').innerText = `Natural neighbour`;
+        gl.uniform1i(naturalNeighbourPositionTexture.positions_texture, 0);
+        gl.uniform1i(naturalNeighbourPositionTexture.image_texture, 1);
+
+        // Pass window dimenstions
+        gl.uniform1f(naturalNeighbourPositionTexture.nn_width, gl.canvas.width);
+        gl.uniform1f(naturalNeighbourPositionTexture.nn_height, gl.canvas.height);
+
         renderDraw(6);
 
 
