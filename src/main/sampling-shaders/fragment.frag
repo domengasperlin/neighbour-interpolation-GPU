@@ -24,7 +24,7 @@ void main(void) {
     if (rand(vec2(texCoords.x, texCoords.y)) < 0.95) {
 
         // Zero alpha black pixel
-        tmpOutColor = vec4(tmpOutColor.rgb, 0.0);
+        tmpOutColor = vec4(0.0,0.0,0.0, 0.0);
 
         tmpPosition = vec4(texCoords, 0.0, 0.0);
 
