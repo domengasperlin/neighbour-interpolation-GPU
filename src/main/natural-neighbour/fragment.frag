@@ -7,7 +7,6 @@ in vec2 point;
 in vec2 texCoords;
 layout(location = 0) out vec4 outColor;
 
-
 uniform sampler2D positions_texture;
 uniform sampler2D image_texture;
 uniform float imageWidth;
@@ -20,63 +19,77 @@ void main(void) {
     float pixelWidth = 1.0/imageWidth;
     float pixelHeight = 1.0/imageHeight;
 
-    float maxStep = 30.0; // window size parameter
-    float step = 1.0;
 
-    vec2 directions[8];
-    directions[0] = vec2(point.s - step*pixelWidth, point.t - step*pixelHeight);
-    directions[1] = vec2(point.s                 ,  point.t - step*pixelHeight);
-    directions[2] = vec2(point.s + step*pixelWidth, point.t - step*pixelHeight);
-    directions[3] = vec2(point.s - step*pixelWidth, point.t);
-    directions[4] = vec2(point.s + step*pixelWidth, point.t);
-    directions[5] = vec2(point.s - step*pixelWidth, point.t + step*pixelHeight);
-    directions[6] = vec2(point.s                  , point.t + step*pixelHeight);
-    directions[7] = vec2(point.s + step*pixelWidth, point.t + step*pixelHeight);
+    // Pixels inside window area
+    int pixelsInArea = 0;
+    // Cumulative color
+    vec4 finalColor = vec4(0, 0, 0, 0.0);
 
-    // be careful for overflow
-    int pixelsIn = 0;
-    vec4 finalColor = vec4(0,0,0,0);
+    // Square window size that can be adjusted according to the size of the image and presence of points
+    int windowSize = 5;
 
-    vec4 tmpOutColor = texture(image_texture, positions);
+    // Mannualy input csize=(2 * windowSize+1)^2 do to limitations of dynamic array
+    int csize = 121;
+    vec2 locations[121];
+    int colorValues[121];
+
+    int index = 0;
 
 
-    while(step < maxStep) {
 
-        for (int i = 0; i < 8; i++) {
+    for (int i = -windowSize; i <= windowSize; i++) {
+        for (int j = -windowSize; j <= windowSize; j++) {
 
-            vec4 distanceTexturePoint = texture(positions_texture, directions[i]);
+            vec2 iterFrag = vec2(point.s + float(i)*pixelWidth, point.t + float(j)*pixelHeight);
+            vec4 distTextPoint = texture(positions_texture, iterFrag);
 
-            if (distanceTexturePoint.a != 1.0) {
-                continue;
-            }
+            // Out of screen coordinates
+            if (iterFrag.s < 0.0 || iterFrag.s >= 1.0 || iterFrag.t < 0.0 || iterFrag.t >= 1.0) continue;
+            if (distTextPoint.a != 1.0) continue;
 
-            float distanceToBlue = (distanceTexturePoint.r-point.s)*(distanceTexturePoint.r-point.s) + (distanceTexturePoint.g-point.t)*(distanceTexturePoint.g-point.t);
-            float distanceToNeighbour = (directions[i].r-point.s)*(directions[i].r-point.s) + (directions[i].g-point.t)*(directions[i].g-point.t);
+            // Distance between voroiCoord point and iterFrag
+            float fragIterToVoroiCoord = (distTextPoint.r-iterFrag.s)*(distTextPoint.r-iterFrag.s) + (distTextPoint.g-iterFrag.t)*(distTextPoint.g-iterFrag.t);
+
+            // Distance between query point and iterFrag
+            float queryToIterFrag = (iterFrag.r-point.s)*(iterFrag.r-point.s) + (iterFrag.g-point.t)*(iterFrag.g-point.t);
 
             // Check the distance if smaller count the pixel in
-            if (distanceToNeighbour < distanceToBlue) {
+            if (queryToIterFrag < fragIterToVoroiCoord) {
 
-                finalColor += texture(image_texture, positions);
-                pixelsIn++;
+                vec2 pixelColorLoc = iterFrag.xy;
+
+                bool found = false;
+                for (int k = 0; k < csize; k++) {
+                    // If such entry already exist
+                    if (locations[i] == pixelColorLoc) {
+                        // Add stolen area for that location
+                        colorValues[i] += 1;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    // If not add the entry
+                    locations[index] = pixelColorLoc;
+                    // Add stolen area for that location
+                    colorValues[index] += 1;
+                    // Pointer to next available location
+                    index++;
+                }
+                pixelsInArea++;
 
             }
 
         }
 
-        step += 1.0;
     }
 
+    for (int k = 0; k < csize; k++) {
+        // If such color already exist
+        float delta = float(colorValues[k])  / float(pixelsInArea);
+        finalColor += (delta * texture(image_texture, texture(positions_texture,locations[k].xy).xy));
 
-    finalColor /= float(pixelsIn);
-    if (pixelsIn == 0) {
-        finalColor = texture(image_texture, positions);
     }
-
 
     outColor = finalColor;
-
-
-
-
-
 }

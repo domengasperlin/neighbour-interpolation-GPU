@@ -30,8 +30,8 @@ let jfaXYDataTexture = null;
 // Webgl context
 let gl = null;
 // Select stages (programs) to be performed
-const performStages = [1, 2, 3, 4];
-let realtime = true;
+const performStages = [1, 2, 3, 4,5];
+let realtime = false;
 
 async function initTextures(gl) {
     // Image texture that will be used for sampling in program 1
@@ -348,10 +348,12 @@ const main = async () => {
 
 
     // ========================================================================  SIMPLE DRAW PROGRAM ====================================================
+    let stepDelay = 1000;
+
     if (performStages.includes(3) && !realtime) {
 
         // Choose demo for results with specified delay
-        let stepDelay = 1000;
+
         let showSteps = [1, 2, 3, 4];
 
         let positionBufferSDraw = gl.createBuffer();
@@ -435,7 +437,7 @@ const main = async () => {
 
     // ========================================================================  NEAREST NEIGHBOUR PROGRAM ====================================================
 
-    if (performStages.includes(4)) {
+    if (performStages.includes(4) && !realtime) {
 
         let positionBufferFromTex = gl.createBuffer();
         let vertexArrayObjectFromTex = gl.createVertexArray();
@@ -459,6 +461,8 @@ const main = async () => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.bindVertexArray(null);
         gl.bindTexture(gl.TEXTURE_2D, null);
+        await sleep(stepDelay);
+
 
     }
 
@@ -495,6 +499,8 @@ const main = async () => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.bindVertexArray(null);
         gl.bindTexture(gl.TEXTURE_2D, null);
+
+        await sleep(stepDelay);
 
     }
 
