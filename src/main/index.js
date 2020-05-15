@@ -150,6 +150,7 @@ const main = async () => {
     // Looking up uniform locations
     const uniformsSampling = {
         textureLocation1: gl.getUniformLocation(samplingProgram, 'texture_u_image'),
+        cuttOffPercetage: gl.getUniformLocation(samplingProgram, 'cutt_off'),
     };
 
     // JFA PROGRAM
@@ -239,6 +240,12 @@ const main = async () => {
 
     bindTextureAndAttachementToFrameBuffer(samplingColorsframeBuffertex, jfaXYDataTexture, gl.COLOR_ATTACHMENT1);
 
+    // Bigger cutoff less pixels kept
+
+    let points = 281250;
+    let cuttOff = -(points/(gl.canvas.width*gl.canvas.height)-1);
+
+    let pixelsKept =Math.round(gl.canvas.width*gl.canvas.height*(1-cuttOff));
 
     // ======================================================================== SAMPLING PROGRAM  ====================================================
 
@@ -256,6 +263,7 @@ const main = async () => {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, imageTexture);
         gl.uniform1i(uniformsSampling.textureLocation1, 0);
+        gl.uniform1f(uniformsSampling.cuttOffPercetage, cuttOff);
 
         renderDraw(6);
 
@@ -451,7 +459,7 @@ const main = async () => {
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, imageDataTexture1);
 
-        document.getElementById('demo_id').innerText = `Nearest neighbour`;
+        document.getElementById('demo_id').innerText = `Nearest neighbour out of ${pixelsKept} points`;
         gl.uniform1i(uniformsPositionTexture.positions_texture, 0);
         gl.uniform1i(uniformsPositionTexture.image_texture, 1);
         renderDraw(6);
@@ -484,7 +492,7 @@ const main = async () => {
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, imageDataTexture1);
 
-        document.getElementById('demo_id').innerText = `Natural neighbour`;
+        document.getElementById('demo_id').innerText = `Natural neighbour out of ${pixelsKept} points`;
         gl.uniform1i(naturalNeighbourPositionTexture.positions_texture, 0);
         gl.uniform1i(naturalNeighbourPositionTexture.image_texture, 1);
 
