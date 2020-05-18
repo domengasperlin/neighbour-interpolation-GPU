@@ -1,6 +1,6 @@
 
 
-function loadTexture(gl, url) {
+function loadTexture(gl, url, width, height) {
     return new Promise((resolve, reject) => {
 
         const texture = gl.createTexture();
@@ -13,8 +13,8 @@ function loadTexture(gl, url) {
         const level = 0;
         // the format the GPU will use internally
         const internalFormat = gl.RGBA;
-        const width = 1;
-        const height = 1;
+        const wid = 1;
+        const hei = 1;
         const border = 0;
         // format and type of the data you're supplying to WebGL
         const srcFormat = gl.RGBA;
@@ -22,19 +22,21 @@ function loadTexture(gl, url) {
 
         const pixel = new Uint8Array([255, 255, 255, 255]);  // black
         gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
-            width, height, border, srcFormat, srcType,
+            wid, hei, border, srcFormat, srcType,
             pixel);
 
         const image = new Image();
         image.src = url;
         image.onload = function () {
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
 
             gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
 
-            gl.generateMipmap(gl.TEXTURE_2D);
+            console.log(image.width)
+            console.log(image.height)
+
+            // gl.generateMipmap(gl.TEXTURE_2D);
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
@@ -51,7 +53,7 @@ function loadTexture(gl, url) {
 }
 
 // TODO: check the datatypes https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html
-function createDataTexture(gl) {
+function createDataTexture(gl, width, height) {
 
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -64,8 +66,7 @@ function createDataTexture(gl) {
     const srcType = gl.UNSIGNED_BYTE;
     const border = 0;
 
-    const width = gl.canvas.width;
-    const height = gl.canvas.height;
+
 
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -88,7 +89,7 @@ function createDataTexture(gl) {
 
 }
 
-function createXYTexture(gl) {
+function createXYTexture(gl, width, height) {
 
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -101,8 +102,6 @@ function createXYTexture(gl) {
     const srcType = gl.FLOAT;
     const border = 0;
 
-    const width = gl.canvas.width;
-    const height = gl.canvas.height;
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
 

@@ -1,22 +1,17 @@
-const resizeCanvas = (canvas, multiplier) => {
-    var cssToRealPixels = window.devicePixelRatio || 1;
 
-    // Lookup the size the browser is displaying the canvas in CSS pixels
-    // and compute a size needed to make our drawingbuffer match it in
-    // device pixels.
-    var displayWidth = Math.floor(canvas.clientWidth * cssToRealPixels);
-    var displayHeight = Math.floor(canvas.clientHeight * cssToRealPixels);
+import imageProp from './image-size-js'
+
+
+const resizeCanvas = (gl, canvas, multiplier) => {
 
     // Check if the canvas is not the same size.
+    if (canvas.width  !== imageProp.displayWidth ||
+        canvas.height !== imageProp.displayHeight) {
 
-    if (canvas.width !== displayWidth ||
-        canvas.height !== displayHeight) {
-
-
+        // Make the canvas the same size
+        canvas.width  = imageProp.displayWidth;
+        canvas.height = imageProp.displayHeight;
     }
-    // Make the canvas fixed size
-    canvas.width = 220;
-    canvas.height = 220;
 };
 
 export default resizeCanvas;

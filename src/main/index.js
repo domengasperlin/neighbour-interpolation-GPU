@@ -16,11 +16,12 @@ import naturalNeighbourVertexShaderSrc from './natural-neighbour/vertex.vert';
 
 // Helper functions
 import createProgram from './create-program';
+import imageProp from './image-size-js'
 import createTexture from './create-texture';
 import render from './draw';
 import resizeCanvas from './resize-canvas';
 // Assets import
-import img from '../assets/images/lenna.png'
+import img from '../assets/images/benjamin.jpg'
 import verts from "./two-triangles";
 
 // Textures
@@ -31,22 +32,23 @@ let jfaXYDataTexture = null;
 let gl = null;
 // Select stages (programs) to be performed
 const performStages = [1, 2, 3, 4,5];
-let realtime = false;
+let realtime = true;
 
 async function initTextures(gl) {
     // Image texture that will be used for sampling in program 1
-    imageTexture = await createTexture.loadTexture(gl, img);
+    imageTexture = await createTexture.loadTexture(gl, img,imageProp.displayWidth, imageProp.displayHeight);
     // The same image is used instead of data texture if we want to skip the sampling program (e.g. input image is already sampled)
-    imageDataTexture1 = await createTexture.loadTexture(gl, img);
+    imageDataTexture1 = await createTexture.createXYTexture(gl, imageProp.displayWidth, imageProp.displayHeight);
     // Floating texture used to JFA algorithm
-    jfaXYDataTexture = await createTexture.createXYTexture(gl);
+    jfaXYDataTexture = await createTexture.createXYTexture(gl, imageProp.displayWidth, imageProp.displayHeight);
 
 }
 
 // Resize canvas and viewport
 const resize = () => {
-    resizeCanvas(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    resizeCanvas(gl, gl.canvas);
+    gl.viewport(0, 0, imageProp.displayWidth, imageProp.displayHeight);
+
 };
 
 function renderDraw(n) {
@@ -105,7 +107,7 @@ function bindTextureAndAttachementToFrameBuffer(frameBuffer, texture, attachemen
         return;
     }
 
-    bindFramebufferAndSetViewport(frameBuffer, gl.canvas.width, gl.canvas.height);
+    bindFramebufferAndSetViewport(frameBuffer, imageProp.displayWidth, imageProp.displayHeight);
 
     // Attach the texture as the first color attachment to the framebuffer
     gl.framebufferTexture2D(gl.FRAMEBUFFER, attachement, gl.TEXTURE_2D, texture, 0);
@@ -242,10 +244,10 @@ const main = async () => {
 
     // Bigger cutoff less pixels kept
 
-    let points = 281250;
-    let cuttOff = -(points/(gl.canvas.width*gl.canvas.height)-1);
+    let points = 20850;
+    let cuttOff = -(points/(imageProp.displayHeight*imageProp.displayWidth)-1);
 
-    let pixelsKept =Math.round(gl.canvas.width*gl.canvas.height*(1-cuttOff));
+    let pixelsKept = Math.round(imageProp.displayHeight*imageProp.displayWidth*(1-cuttOff));
 
     // ======================================================================== SAMPLING PROGRAM  ====================================================
 
@@ -269,7 +271,7 @@ const main = async () => {
 
 
         // Render to samplingColorsframeBuffertex by binding the framebuffer ==========================================
-        bindFramebufferAndSetViewport(samplingColorsframeBuffertex, gl.canvas.width, gl.canvas.height);
+        bindFramebufferAndSetViewport(samplingColorsframeBuffertex, imageProp.displayWidth, imageProp.displayHeight);
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
         renderDraw(6);
 
@@ -297,11 +299,11 @@ const main = async () => {
 
 
         // EXECUTE JFA ALGORITHM
-        gl.uniform1f(uniformsJFA.jfa_width, gl.canvas.width);
-        gl.uniform1f(uniformsJFA.jfa_height, gl.canvas.height);
+        gl.uniform1f(uniformsJFA.jfa_width, imageProp.displayWidth);
+        gl.uniform1f(uniformsJFA.jfa_height, imageProp.displayHeight);
 
         let step = 1;
-        while (step * 2 < gl.canvas.width || step * 2 < gl.canvas.height) step *= 2;
+        while (step * 2 < imageProp.displayHeight || step * 2 < imageProp.displayWidth) step *= 2;
 
 
         const jumpFloodingFrameBuffer = gl.createFramebuffer();
@@ -312,13 +314,13 @@ const main = async () => {
         while (step >= 1) {
 
             // Create textures for current iteration
-            let color = createTexture.createDataTexture(gl);
-            let coordinates = createTexture.createDataTexture(gl);
+            let color = createTexture.createDataTexture(gl, imageProp.displayWidth, imageProp.displayHeight);
+            let coordinates = createTexture.createDataTexture(gl,imageProp.displayWidth, imageProp.displayHeight);
 
             // Bind them
             bindTextureAndAttachementToFrameBuffer(jumpFloodingFrameBuffer, color, gl.COLOR_ATTACHMENT0);
             bindTextureAndAttachementToFrameBuffer(jumpFloodingFrameBuffer, coordinates, gl.COLOR_ATTACHMENT1);
-            bindFramebufferAndSetViewport(jumpFloodingFrameBuffer, gl.canvas.width, gl.canvas.height);
+            bindFramebufferAndSetViewport(jumpFloodingFrameBuffer, imageProp.displayWidth, imageProp.displayHeight);
 
             // Bind appropriate textures on different positions
             // Specifies which texture unit to make active.
@@ -497,8 +499,8 @@ const main = async () => {
         gl.uniform1i(naturalNeighbourPositionTexture.image_texture, 1);
 
         // Pass window dimenstions
-        gl.uniform1f(naturalNeighbourPositionTexture.nn_width, gl.canvas.width);
-        gl.uniform1f(naturalNeighbourPositionTexture.nn_height, gl.canvas.height);
+        gl.uniform1f(naturalNeighbourPositionTexture.nn_width, imageProp.displayWidth);
+        gl.uniform1f(naturalNeighbourPositionTexture.nn_height, imageProp.displayHeight);
 
         renderDraw(6);
 
